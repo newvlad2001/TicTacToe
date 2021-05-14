@@ -65,59 +65,6 @@ namespace ClientWPF
             }
         }
 
-        private bool IsFieldsFilledCorrectly()
-        {
-            string value = IPTextBox.Text;
-            bool isValid = IPAddress.TryParse(value, out var address);
-            if (!isValid)
-            {
-                MessageBox.Show("Error with IP", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                IPTextBox.Text = "";
-                return false;
-            }
-
-            value = PortTextBox.Text;
-            isValid = int.TryParse(value, out _);
-            if (!isValid)
-            {
-                MessageBox.Show("Error with port", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                PortTextBox.Text = "";
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool IsFieldsFilled()
-        {
-            if (IPTextBox.Text == "" || PortTextBox.Text == "")
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private void PortTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (sender is TextBox textBox)
-            {
-                textBox.Text = new string
-                (
-                    textBox.Text
-                        .Where
-                        (ch =>
-                            ch == '0' || ch == '1' || ch == '2' || ch == '3' ||
-                            ch == '4' || ch == '5' || ch == '6' || ch == '7' ||
-                            ch == '8' || ch == '9'
-                        )
-                        .ToArray()
-                );
-                textBox.SelectionStart = e.Changes.First().Offset + 1;
-                textBox.SelectionLength = 0;
-            }
-        }
-
         private void CreateClientSocket()
         {
             IPAddress ipAddress = IPAddress.Parse(IPTextBox.Text);
@@ -167,36 +114,7 @@ namespace ClientWPF
                 );
             }
         }
-
-        private void SetGameEnabled(bool isConnected)
-        {
-            PlayGrid.IsEnabled = isConnected;
-            RestartButton.IsEnabled = isConnected;
-        }
-
-        private void SetStatusLabel(bool isConnected)
-        {
-            StatusLabel.Content = isConnected ? "Connected" : "Disconnected";
-            StatusLabel.Foreground = isConnected ? Brushes.Green : Brushes.Red;
-            ConnectButton.IsEnabled = !isConnected;
-        }
-
-        private void GameButtonOnClick(object sender, RoutedEventArgs e)
-        {
-            if (IsYourTurn)
-            {
-                Button button = (Button) sender;
-                button.IsEnabled = false;
-                Helper.TransferHelper.Send("button/" + button.Name + '/' + Sign, _clientSocket);
-                IsYourTurn = false;
-            }
-            else
-            {
-                MessageBox.Show("Wait for your turn", "Is not your turn", MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-        }
-
+        
         private void MsgProcessor(string data)
         {
             string[] splittedData = data.Split('/');
@@ -264,6 +182,35 @@ namespace ClientWPF
             }
         }
 
+        private void SetGameEnabled(bool isConnected)
+        {
+            PlayGrid.IsEnabled = isConnected;
+            RestartButton.IsEnabled = isConnected;
+        }
+
+        private void SetStatusLabel(bool isConnected)
+        {
+            StatusLabel.Content = isConnected ? "Connected" : "Disconnected";
+            StatusLabel.Foreground = isConnected ? Brushes.Green : Brushes.Red;
+            ConnectButton.IsEnabled = !isConnected;
+        }
+
+        private void GameButtonOnClick(object sender, RoutedEventArgs e)
+        {
+            if (IsYourTurn)
+            {
+                Button button = (Button) sender;
+                button.IsEnabled = false;
+                Helper.TransferHelper.Send("button/" + button.Name + '/' + Sign, _clientSocket);
+                IsYourTurn = false;
+            }
+            else
+            {
+                MessageBox.Show("Wait for your turn", "Is not your turn", MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _isClosing = true;
@@ -287,6 +234,59 @@ namespace ClientWPF
         private void RestartButton_OnClick(object sender, RoutedEventArgs e)
         {
             TransferHelper.Send("restart", _clientSocket);
+        }
+        
+        private bool IsFieldsFilledCorrectly()
+        {
+            string value = IPTextBox.Text;
+            bool isValid = IPAddress.TryParse(value, out var address);
+            if (!isValid)
+            {
+                MessageBox.Show("Error with IP", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                IPTextBox.Text = "";
+                return false;
+            }
+
+            value = PortTextBox.Text;
+            isValid = int.TryParse(value, out _);
+            if (!isValid)
+            {
+                MessageBox.Show("Error with port", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                PortTextBox.Text = "";
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool IsFieldsFilled()
+        {
+            if (IPTextBox.Text == "" || PortTextBox.Text == "")
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private void PortTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                textBox.Text = new string
+                (
+                    textBox.Text
+                        .Where
+                        (ch =>
+                            ch == '0' || ch == '1' || ch == '2' || ch == '3' ||
+                            ch == '4' || ch == '5' || ch == '6' || ch == '7' ||
+                            ch == '8' || ch == '9'
+                        )
+                        .ToArray()
+                );
+                textBox.SelectionStart = e.Changes.First().Offset + 1;
+                textBox.SelectionLength = 0;
+            }
         }
     }
 }

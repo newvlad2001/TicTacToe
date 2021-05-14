@@ -17,68 +17,6 @@ namespace Vyachka.Chat.Server
         private static bool _isXConnected = false;
         private static bool _isOConnected = false;
         
-
-        static void Main(string[] args)
-        {
-            string hostName = Dns.GetHostName();
-            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-
-            foreach (var ip in Dns.GetHostEntry(hostName).AddressList)
-            {
-                if (!ip.ToString().Contains(":") && !ip.ToString().Equals("127.0.0.1"))
-                {
-                    ipAddress = ip;
-                }
-            }
-
-            int port = int.Parse(GetData("port"));
-            Console.WriteLine($"IP address: {ipAddress}");
-
-            IPEndPoint ipPoint = new IPEndPoint(ipAddress, port);
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.Bind(ipPoint);
-            socket.Listen(10);
-
-            while (true)
-            {
-                if (!_isXConnected || !_isOConnected)
-                {
-                    Socket clientSocket = socket.Accept();
-                    if (clientSocket != null)
-                    {
-                        ClientData data = null; 
-                        if (!_isXConnected)
-                        {
-                            _isXConnected = true;
-                            data = new ClientData(clientSocket,
-                                TicTacToe.Players.X);
-                            TransferHelper.Send("playerSign/" + data.Name, clientSocket);
-                            TransferHelper.Send("turn/true", clientSocket);
-                        } else
-                        {
-                            _isOConnected = true;
-                            data = new ClientData(clientSocket,
-                                TicTacToe.Players.O);
-                            TransferHelper.Send("playerSign/" + data.Name, clientSocket);
-                            TransferHelper.Send("turn/false", clientSocket);
-                        }
-                        
-                        Console.WriteLine($"{data.Name} connected");
-                        _clients.Add(data);
-
-                        Thread thread = new Thread(CommunicateWithClient);
-                        thread.Start(data);
-                        
-                        if (_isOConnected && _isXConnected)
-                        {
-                            SendAll("start");
-                            _game = new TicTacToe();
-                        }
-                    }
-                }
-            }
-        }
-
         static void CommunicateWithClient(object objData)
         {
             ClientData clientData = (ClientData) objData;
@@ -92,7 +30,8 @@ namespace Vyachka.Chat.Server
                 {
                     _game.Move((int) Char.GetNumericValue(splittedData[1][1]),
                         (int) Char.GetNumericValue(splittedData[1][2]), clientData.Name == TicTacToe.Players.X);
-                } else if (splittedData[0] == "restart")
+                }
+                else if (splittedData[0] == "restart")
                 {
                     SendAll("restart");
                     if (_isOConnected && _isXConnected)
@@ -124,18 +63,15 @@ namespace Vyachka.Chat.Server
             clientData.ClientSocket.Close();
             _clients.Remove(clientData);
             Console.WriteLine($"{clientData.Name} disconnected.");
-
-            if (_clients.Count > 0)
+            
+            SendAll("disconnected");
+            if (clientData.Name == TicTacToe.Players.X)
             {
-                SendAll("disconnected");
-                if (clientData.Name == TicTacToe.Players.X)
-                {
-                    _isXConnected = false;
-                }
-                else
-                {
-                    _isOConnected = false;
-                }
+                _isXConnected = false;
+            }
+            else
+            {
+                _isOConnected = false;
             }
         }
 
@@ -171,6 +107,73 @@ namespace Vyachka.Chat.Server
             }
         }
         
-        
+        static void Main(string[] args)
+        {
+            string hostName = Dns.GetHostName();
+            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
+
+            foreach (var ip in Dns.GetHostEntry(hostName).AddressList)
+            {
+                if (!ip.ToString().Contains(":") && !ip.ToString().Equals("127.0.0.1"))
+                {
+                    ipAddress = ip;
+                }
+            }
+
+            int port = int.Parse(GetData("port"));
+            Console.WriteLine($"IP address: {ipAddress}");
+
+            IPEndPoint ipPoint = new IPEndPoint(ipAddress, port);
+            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(ipPoint);
+            socket.Listen(10);
+
+            while (true)
+            {
+                if (!_isXConnected || !_isOConnected)
+                {
+                    Socket clientSocket = socket.Accept();
+                    if (clientSocket != null)
+                    {
+                        ClientData data = null;
+                        if (!_isXConnected)
+                        {
+                            _isXConnected = true;
+                            data = new ClientData(clientSocket,
+                                TicTacToe.Players.X);
+                            TransferHelper.Send("playerSign/" + data.Name, clientSocket);
+                        }
+                        else
+                        {
+                            _isOConnected = true;
+                            data = new ClientData(clientSocket,
+                                TicTacToe.Players.O);
+                            TransferHelper.Send("playerSign/" + data.Name, clientSocket);
+                        }
+                        
+                        foreach (ClientData client in _clients)
+                        {
+                            if (client != data)
+                                TransferHelper.Send("turn/true", client.ClientSocket);
+                            else 
+                                TransferHelper.Send("turn/false", client.ClientSocket);
+                        }
+                        
+                        Console.WriteLine($"{data.Name} connected");
+                        _clients.Add(data);
+
+                        Thread thread = new Thread(CommunicateWithClient);
+                        thread.Start(data);
+
+                        if (_isOConnected && _isXConnected)
+                        {
+                            SendAll("start");
+                            _game = new TicTacToe();
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }
