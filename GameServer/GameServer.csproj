@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Vyachka.Chat.Server</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Game\Game.csproj" />
+    <ProjectReference Include="..\TransferHelper\TransferHelper.csproj" />
+  </ItemGroup>
+
+</Project>
