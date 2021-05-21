@@ -8,12 +8,12 @@ using System.Text;
 using System.Threading;
 using Game;
 
-namespace Vyachka.Chat.Server
+namespace GameServer
 {
-    public class Server
+    public static class Server
     {
         private static List<ClientData> _clients = new List<ClientData>();
-        private static TicTacToe _game;
+        private static Game.TicTacToe _game;
         private static bool _isXConnected = false;
         private static bool _isOConnected = false;
         
@@ -29,7 +29,7 @@ namespace Vyachka.Chat.Server
                 if (splittedData[0] == "button")
                 {
                     _game.Move((int) Char.GetNumericValue(splittedData[1][1]),
-                        (int) Char.GetNumericValue(splittedData[1][2]), clientData.Name == TicTacToe.Players.X);
+                        (int) Char.GetNumericValue(splittedData[1][2]), clientData.Name == Game.TicTacToe.Players.X);
                 }
                 else if (splittedData[0] == "restart")
                 {
@@ -37,7 +37,7 @@ namespace Vyachka.Chat.Server
                     if (_isOConnected && _isXConnected)
                         SendAll("start");
                     TransferHelper.Send("turn/false", clientData.ClientSocket);
-                    _game = new TicTacToe();
+                    _game = new Game.TicTacToe();
                 }
 
                 foreach (ClientData client in _clients)
@@ -48,7 +48,7 @@ namespace Vyachka.Chat.Server
                         TransferHelper.Send("turn/true", client.ClientSocket);
                     }
 
-                    if (_game.IsWinner(clientData.Name == TicTacToe.Players.X))
+                    if (_game.IsWinner(clientData.Name == Game.TicTacToe.Players.X))
                     {
                         TransferHelper.Send("win/" + clientData.Name + " wins the game", client.ClientSocket);
                     }
@@ -65,7 +65,7 @@ namespace Vyachka.Chat.Server
             Console.WriteLine($"{clientData.Name} disconnected.");
             
             SendAll("disconnected");
-            if (clientData.Name == TicTacToe.Players.X)
+            if (clientData.Name == Game.TicTacToe.Players.X)
             {
                 _isXConnected = false;
             }
@@ -140,14 +140,14 @@ namespace Vyachka.Chat.Server
                         {
                             _isXConnected = true;
                             data = new ClientData(clientSocket,
-                                TicTacToe.Players.X);
+                                Game.TicTacToe.Players.X);
                             TransferHelper.Send("playerSign/" + data.Name, clientSocket);
                         }
                         else
                         {
                             _isOConnected = true;
                             data = new ClientData(clientSocket,
-                                TicTacToe.Players.O);
+                                Game.TicTacToe.Players.O);
                             TransferHelper.Send("playerSign/" + data.Name, clientSocket);
                         }
                         
@@ -168,7 +168,7 @@ namespace Vyachka.Chat.Server
                         if (_isOConnected && _isXConnected)
                         {
                             SendAll("start");
-                            _game = new TicTacToe();
+                            _game = new Game.TicTacToe();
                         }
                     }
                 }
